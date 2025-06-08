@@ -1,0 +1,29 @@
+# Use the official PHP image from Docker Hub
+FROM php:8.1-cli
+
+# Install necessary dependencies
+RUN apt-get update && apt-get install -y libpng-dev libjpeg-dev libfreetype6-dev git unzip
+
+# Install PHP extensions
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd
+
+# Set the working directory in the container
+WORKDIR /var/www/html
+
+# Copy the composer.json and composer.lock files to the container
+COPY composer.json /var/www/html/
+
+# Install PHP dependencies using Composer
+RUN curl -sS https://getcomposer.org/installer | php \
+    && mv composer.phar /usr/local/bin/composer \
+    && composer install
+
+# Copy the rest of the application files
+COPY . /var/www/html/
+
+# Expose the port the app runs on (example: 8080 for Slim app)
+EXPOSE 8080
+
+# Start the PHP built-in server (if this is a development environment)
+CMD ["php", "-S", "0.0.0.0:8080", "-t", "public"]
